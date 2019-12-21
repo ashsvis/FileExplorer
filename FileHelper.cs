@@ -190,5 +190,26 @@ namespace FileExplorer
             [MarshalAs(UnmanagedType.LPWStr)]
             public string lpszProgressTitle;
         }
+
+        public static void MoveFile(string sourceName, string destName)
+        {
+            File.Move(sourceName, destName);
+        }
+
+        public static void MoveFolder(string sourceName, string destName)
+        {
+            Directory.Move(sourceName, destName);
+        }
+
+        public static void CopyFile(string sourceName, string destName)
+        {
+            File.Copy(sourceName, destName);
+        }
+
+        public static void CopyFolder(string sourceName, string destName)
+        {
+            Microsoft.VisualBasic.FileIO.FileSystem.CopyDirectory(sourceName, destName);
+        }
+
     }
 }

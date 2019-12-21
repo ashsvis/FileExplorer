@@ -54,6 +54,8 @@
             this.tsmiExit = new System.Windows.Forms.ToolStripMenuItem();
             this.tsbOpen = new System.Windows.Forms.ToolStripButton();
             this.tsbCreateFolder = new System.Windows.Forms.ToolStripButton();
+            this.tsbListView = new System.Windows.Forms.ToolStripButton();
+            this.tsbTableView = new System.Windows.Forms.ToolStripButton();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.toolStrip2 = new System.Windows.Forms.ToolStrip();
             this.tsbBack = new System.Windows.Forms.ToolStripButton();
@@ -63,19 +65,17 @@
             this.tsbFind = new System.Windows.Forms.ToolStripButton();
             this.statusStrip2 = new System.Windows.Forms.StatusStrip();
             this.tsslPath = new System.Windows.Forms.ToolStripStatusLabel();
-            this.tsbListView = new System.Windows.Forms.ToolStripButton();
-            this.tsbTableView = new System.Windows.Forms.ToolStripButton();
             this.fileSystemWatcher1 = new System.IO.FileSystemWatcher();
             this.contextItemsMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.cmiOpen = new System.Windows.Forms.ToolStripMenuItem();
-            this.cmiCopy = new System.Windows.Forms.ToolStripMenuItem();
-            this.contextFolderMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.cmiPaste = new System.Windows.Forms.ToolStripMenuItem();
-            this.cmiCut = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripSeparator();
+            this.cmiCut = new System.Windows.Forms.ToolStripMenuItem();
+            this.cmiCopy = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem5 = new System.Windows.Forms.ToolStripSeparator();
             this.cmiDelete = new System.Windows.Forms.ToolStripMenuItem();
             this.cmiRename = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextFolderMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.cmiPaste = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -251,7 +251,7 @@
             this.tsmiCut.Enabled = false;
             this.tsmiCut.Name = "tsmiCut";
             this.tsmiCut.Size = new System.Drawing.Size(180, 22);
-            this.tsmiCut.Text = "Вырезать";
+            this.tsmiCut.Text = "Переместить";
             this.tsmiCut.Click += new System.EventHandler(this.tsmiCut_Click);
             // 
             // tsmiCopy
@@ -338,6 +338,32 @@
             this.tsbCreateFolder.Text = "Новая папка";
             this.tsbCreateFolder.ToolTipText = "Создание новой пустой папки.";
             this.tsbCreateFolder.Click += new System.EventHandler(this.tsbCreateFolder_Click);
+            // 
+            // tsbListView
+            // 
+            this.tsbListView.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.tsbListView.CheckOnClick = true;
+            this.tsbListView.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.tsbListView.Image = ((System.Drawing.Image)(resources.GetObject("tsbListView.Image")));
+            this.tsbListView.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbListView.Name = "tsbListView";
+            this.tsbListView.Size = new System.Drawing.Size(23, 22);
+            this.tsbListView.Text = "Просмотр списком";
+            this.tsbListView.Click += new System.EventHandler(this.tsbListView_Click);
+            // 
+            // tsbTableView
+            // 
+            this.tsbTableView.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.tsbTableView.Checked = true;
+            this.tsbTableView.CheckOnClick = true;
+            this.tsbTableView.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.tsbTableView.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.tsbTableView.Image = ((System.Drawing.Image)(resources.GetObject("tsbTableView.Image")));
+            this.tsbTableView.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbTableView.Name = "tsbTableView";
+            this.tsbTableView.Size = new System.Drawing.Size(23, 22);
+            this.tsbTableView.Text = "Проосмотр таблицей";
+            this.tsbTableView.Click += new System.EventHandler(this.tsbTableView_Click);
             // 
             // tableLayoutPanel1
             // 
@@ -446,32 +472,6 @@
             this.tsslPath.Spring = true;
             this.tsslPath.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // tsbListView
-            // 
-            this.tsbListView.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.tsbListView.CheckOnClick = true;
-            this.tsbListView.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.tsbListView.Image = ((System.Drawing.Image)(resources.GetObject("tsbListView.Image")));
-            this.tsbListView.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tsbListView.Name = "tsbListView";
-            this.tsbListView.Size = new System.Drawing.Size(23, 22);
-            this.tsbListView.Text = "Просмотр списком";
-            this.tsbListView.Click += new System.EventHandler(this.tsbListView_Click);
-            // 
-            // tsbTableView
-            // 
-            this.tsbTableView.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.tsbTableView.Checked = true;
-            this.tsbTableView.CheckOnClick = true;
-            this.tsbTableView.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.tsbTableView.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.tsbTableView.Image = ((System.Drawing.Image)(resources.GetObject("tsbTableView.Image")));
-            this.tsbTableView.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tsbTableView.Name = "tsbTableView";
-            this.tsbTableView.Size = new System.Drawing.Size(23, 22);
-            this.tsbTableView.Text = "Проосмотр таблицей";
-            this.tsbTableView.Click += new System.EventHandler(this.tsbTableView_Click);
-            // 
             // fileSystemWatcher1
             // 
             this.fileSystemWatcher1.EnableRaisingEvents = true;
@@ -492,7 +492,7 @@
             this.cmiDelete,
             this.cmiRename});
             this.contextItemsMenu.Name = "contextItemsMenu";
-            this.contextItemsMenu.Size = new System.Drawing.Size(162, 126);
+            this.contextItemsMenu.Size = new System.Drawing.Size(181, 148);
             this.contextItemsMenu.Opening += new System.ComponentModel.CancelEventHandler(this.contextItemsMenu_Opening);
             // 
             // cmiOpen
@@ -503,39 +503,24 @@
             this.cmiOpen.Text = "Открыть";
             this.cmiOpen.Click += new System.EventHandler(this.tsbOpen_Click);
             // 
+            // toolStripMenuItem4
+            // 
+            this.toolStripMenuItem4.Name = "toolStripMenuItem4";
+            this.toolStripMenuItem4.Size = new System.Drawing.Size(177, 6);
+            // 
+            // cmiCut
+            // 
+            this.cmiCut.Name = "cmiCut";
+            this.cmiCut.Size = new System.Drawing.Size(180, 22);
+            this.cmiCut.Text = "Переместить";
+            this.cmiCut.Click += new System.EventHandler(this.tsmiCut_Click);
+            // 
             // cmiCopy
             // 
             this.cmiCopy.Name = "cmiCopy";
             this.cmiCopy.Size = new System.Drawing.Size(180, 22);
             this.cmiCopy.Text = "Копировать";
             this.cmiCopy.Click += new System.EventHandler(this.tsmiCopy_Click);
-            // 
-            // contextFolderMenu
-            // 
-            this.contextFolderMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.cmiPaste});
-            this.contextFolderMenu.Name = "contextFolderMenu";
-            this.contextFolderMenu.Size = new System.Drawing.Size(123, 26);
-            this.contextFolderMenu.Opening += new System.ComponentModel.CancelEventHandler(this.contextFolderMenu_Opening);
-            // 
-            // cmiPaste
-            // 
-            this.cmiPaste.Name = "cmiPaste";
-            this.cmiPaste.Size = new System.Drawing.Size(122, 22);
-            this.cmiPaste.Text = "Вставить";
-            this.cmiPaste.Click += new System.EventHandler(this.tsmiPaste_Click);
-            // 
-            // cmiCut
-            // 
-            this.cmiCut.Name = "cmiCut";
-            this.cmiCut.Size = new System.Drawing.Size(180, 22);
-            this.cmiCut.Text = "Вырезать";
-            this.cmiCut.Click += new System.EventHandler(this.tsmiCut_Click);
-            // 
-            // toolStripMenuItem4
-            // 
-            this.toolStripMenuItem4.Name = "toolStripMenuItem4";
-            this.toolStripMenuItem4.Size = new System.Drawing.Size(177, 6);
             // 
             // toolStripMenuItem5
             // 
@@ -555,6 +540,21 @@
             this.cmiRename.Size = new System.Drawing.Size(180, 22);
             this.cmiRename.Text = "Переименовать";
             this.cmiRename.Click += new System.EventHandler(this.tsmiRename_Click);
+            // 
+            // contextFolderMenu
+            // 
+            this.contextFolderMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.cmiPaste});
+            this.contextFolderMenu.Name = "contextFolderMenu";
+            this.contextFolderMenu.Size = new System.Drawing.Size(123, 26);
+            this.contextFolderMenu.Opening += new System.ComponentModel.CancelEventHandler(this.contextFolderMenu_Opening);
+            // 
+            // cmiPaste
+            // 
+            this.cmiPaste.Name = "cmiPaste";
+            this.cmiPaste.Size = new System.Drawing.Size(122, 22);
+            this.cmiPaste.Text = "Вставить";
+            this.cmiPaste.Click += new System.EventHandler(this.tsmiPaste_Click);
             // 
             // FileExplorerForm
             // 

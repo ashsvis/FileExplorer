@@ -111,6 +111,16 @@ namespace FileExplorer
         {
             tsbOpen.Visible = mainListView.SelectedIndices.Count == 1;
             mainListView.ContextMenuStrip = mainListView.SelectedIndices.Count > 0 ? contextItemsMenu : contextFolderMenu;
+            if (mainListView.SelectedIndices.Count == 1)
+            {
+                var item = files[mainListView.SelectedIndices[0]];
+                var what = item.IsFolder ? "Папка:" : "Файл:";
+                var size = item.IsFolder ? "" : $". Размер (байт): {item.Length}";
+                ShowStatus($"{what} \"{item.FileName}\"{size}");
+            }
+            else
+                if (mainListView.SelectedIndices.Count > 1)
+                    ShowStatus($"Выбрано элементов: {mainListView.SelectedIndices.Count}");
         }
 
         /// <summary>
@@ -143,6 +153,26 @@ namespace FileExplorer
             }
             else
             {
+                tsslStatus.BackColor = SystemColors.Control;
+                tsslStatus.Text = msg;
+                statusStrip1.Refresh();
+            }
+        }
+
+        /// <summary>
+        /// Метод для показа сообщений статусной строки
+        /// </summary>
+        /// <param name="msg"></param>
+        private void ShowErrorStatus(string msg)
+        {
+            if (InvokeRequired)
+            {
+                var ddd = new ShowErrorProc(ShowErrorStatus);
+                Invoke(ddd, msg);
+            }
+            else
+            {
+                tsslStatus.BackColor = Color.Yellow;
                 tsslStatus.Text = msg;
                 statusStrip1.Refresh();
             }
@@ -270,7 +300,7 @@ namespace FileExplorer
             }
             catch (Exception ex)
             {
-                ShowStatus(ex.Message);
+                ShowErrorStatus(ex.Message);
             }
         }
 
@@ -383,6 +413,7 @@ namespace FileExplorer
                 files.Sort(FileComparer);
                 ShowStatus($"Показано каталогов: {folders.Length} и файлов: {dirfiles.Length}");
                 mainListView.ResizeColumns(0);
+                mainListView.ContextMenuStrip = contextFolderMenu;
             }
             finally
             {
@@ -590,7 +621,7 @@ namespace FileExplorer
                         }
                         catch (Exception ex)
                         {
-                            ShowStatus($"Не удалось удалить файл {item.FileName}: {ex.Message}");
+                            ShowErrorStatus($"Не удалось удалить файл {item.FileName}: {ex.Message}");
                             continue;
                         }
                     }
@@ -632,6 +663,11 @@ namespace FileExplorer
             mainListView.Focus();
         }
 
+        /// <summary>
+        /// Подготовка к перемещению выбранных элементов
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void tsmiCut_Click(object sender, EventArgs e)
         {
             cutcopy.Clear();
@@ -643,6 +679,11 @@ namespace FileExplorer
             cutop = true;
         }
 
+        /// <summary>
+        /// Подготовка к копированию выбранных элементов
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void tsmiCopy_Click(object sender, EventArgs e)
         {
             cutcopy.Clear();
@@ -654,17 +695,108 @@ namespace FileExplorer
             cutop = false;
         }
 
+        /// <summary>
+        /// Завершение операции по копированию или перемещению элементов
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void tsmiPaste_Click(object sender, EventArgs e)
         {
-
+            if (mainTree.SelectedNode == null) return;
+            var rootFolder = ((TreeNodeFile)mainTree.SelectedNode).DirectoryName;
+            try
+            {
+                if (cutop)
+                    MoveFoldersAndFiles(rootFolder);
+                else
+                    CopyFoldersAndFiles(rootFolder);
+            }
+            finally
+            {
+                cutcopy.Clear();
+            }
         }
 
+        /// <summary>
+        /// Перемещение файлов и папок
+        /// </summary>
+        /// <param name="rootFolder"></param>
+        private void MoveFoldersAndFiles(string rootFolder)
+        {
+            try
+            {
+                Cursor = Cursors.WaitCursor;
+                foreach (var item in cutcopy)
+                {
+                    var destName = Path.Combine(rootFolder, Path.GetFileName(item.FileName));
+                    ShowStatus($"Перемещаю \"{destName}\"...");
+                    try
+                    {
+                        if (item.IsFolder)
+                            FileHelper.MoveFolder(item.FileName, destName);
+                        else
+                            FileHelper.MoveFile(item.FileName, destName);
+                    }
+                    catch (Exception ex)
+                    {
+                        ShowErrorStatus(ex.Message);
+                    }
+                }
+            }
+            finally
+            {
+                Cursor = Cursors.Default;
+            }
+        }
+
+        /// <summary>
+        /// Копирование файлов и папок
+        /// </summary>
+        /// <param name="rootFolder"></param>
+        private void CopyFoldersAndFiles(string rootFolder)
+        {
+            try
+            {
+                Cursor = Cursors.WaitCursor;
+                foreach (var item in cutcopy)
+                {
+                    var destName = Path.Combine(rootFolder, Path.GetFileName(item.FileName));
+                    ShowStatus($"Копирую \"{destName}\"...");
+                    try
+                    {
+                        if (item.IsFolder)
+                            FileHelper.CopyFolder(item.FileName, destName);
+                        else
+                            FileHelper.CopyFile(item.FileName, destName);
+                    }
+                    catch (Exception ex)
+                    {
+                        ShowErrorStatus(ex.Message);
+                    }
+                }
+            }
+            finally
+            {
+                Cursor = Cursors.Default;
+            }
+        }
+
+        /// <summary>
+        /// Вид как таблица файлов и папок
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void tsbTableView_Click(object sender, EventArgs e)
         {
             mainListView.View = View.Details;
             tsbListView.Checked = false;
         }
 
+        /// <summary>
+        /// Вид как список файлов и папок
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void tsbListView_Click(object sender, EventArgs e)
         {
             mainListView.View = View.List;
