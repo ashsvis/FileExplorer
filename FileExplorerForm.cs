@@ -831,31 +831,33 @@ namespace FileExplorer
             var item = files[mainListView.SelectedIndices[0]];
             var dir = Path.GetDirectoryName(item.FileName);
             var file = Path.GetFileName(item.FileName);
-            ShowProperties(dir, file);
+            ShowFolderFileProperties(dir, file);
         }
 
-        private static void ShowProperties(string dir, string file)
+        private static void ShowFolderFileProperties(string dir, string file)
         {
+            var properties = new NameValueCollection();
             var shellAppType = Type.GetTypeFromProgID("Shell.Application");
             dynamic shell = Activator.CreateInstance(shellAppType);
             var folder = shell.NameSpace(dir);
-            if (folder == null) return;
-            var folderItem = folder.ParseName(file);
-            var names = new Dictionary<int, string>();
-            for (var idx = 0; idx < short.MaxValue; idx++)
+            if (folder != null)
             {
-                var key = (string)folder.GetDetailsOf(null, idx);
-                if (!string.IsNullOrEmpty(key))
+                var folderItem = folder.ParseName(file);
+                var names = new Dictionary<int, string>();
+                for (var idx = 0; idx < short.MaxValue; idx++)
                 {
-                    names.Add(idx, key);
+                    var key = (string)folder.GetDetailsOf(null, idx);
+                    if (!string.IsNullOrEmpty(key))
+                    {
+                        names.Add(idx, key);
+                    }
                 }
-            }
-            var properties = new NameValueCollection();
-            foreach (var idx in names.Keys.OrderBy(x => x))
-            {
-                var value = (string)folder.GetDetailsOf(folderItem, idx);
-                if (!string.IsNullOrEmpty(value))
-                    properties[names[idx]] = value;
+                foreach (var idx in names.Keys.OrderBy(x => x))
+                {
+                    var value = (string)folder.GetDetailsOf(folderItem, idx);
+                    if (!string.IsNullOrEmpty(value))
+                        properties[names[idx]] = value;
+                }
             }
             var frm = new PropertiesForm(properties);
             frm.ShowDialog();
@@ -876,7 +878,33 @@ namespace FileExplorer
             var item = (TreeNodeFile)mainTree.SelectedNode;
             var dir = Path.GetDirectoryName(item.DirectoryName);
             var file = Path.GetFileName(item.DirectoryName);
-            ShowProperties(dir, file);
+            if (string.IsNullOrWhiteSpace(dir))
+            {
+                dir = item.DirectoryName;
+                var properties = new NameValueCollection();
+                var allDrives = DriveInfo.GetDrives();
+                foreach (var drive in allDrives)
+                {
+                    if (drive.Name == dir)
+                    {
+                        properties["Имя"] = drive.Name;
+                        properties["Тип диска"] = drive.DriveType.ToString();
+                        if (drive.IsReady == true)
+                        {
+                            properties["Метка тома"] = drive.VolumeLabel;
+                            properties["Файловая система"] = drive.DriveFormat;
+                            properties["Доступно пользователю"] = (drive.AvailableFreeSpace / (1024 * 1024 * 1024)).ToString() + " ГБ";
+                            properties["Всего доступно на диске"] = (drive.TotalFreeSpace / (1024 * 1024 * 1024)).ToString() + " ГБ";
+                            properties["Общий размер диска"] = (drive.TotalSize / (1024 * 1024 * 1024)).ToString() + " ГБ";
+                        }
+                        break;
+                    }
+                }
+                var frm = new PropertiesForm(properties);
+                frm.ShowDialog();
+            }
+            else
+                ShowFolderFileProperties(dir, file);
         }
 
         private void mainTree_MouseDown(object sender, MouseEventArgs e)
