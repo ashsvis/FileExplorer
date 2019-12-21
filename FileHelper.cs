@@ -16,26 +16,16 @@ namespace FileExplorer
             return DateTime.Now;
         }
 
-        public static int GetDirectoriesCount(string directoryName)
-        {
-            var collection = new DirectoryInfo(directoryName);
-            try
-            {
-                return collection.EnumerateDirectories().Count();
-            }
-            catch
-            {
-                return 0;
-            }
-        }
-
-        public static EntryInfo[] GetDirectoriesCollection(string directoryName, int offset, int count)
+        public static EntryInfo[] GetDirectoriesCollection(string directoryName, string searchPattern = "")
         {
             var collection = new DirectoryInfo(directoryName);
             var directories = new List<EntryInfo>();
             try
             {
-                foreach (var dir in collection.EnumerateDirectories().Skip(offset).Take(count))
+                var sampleCollection = string.IsNullOrWhiteSpace(searchPattern)
+                    ? collection.EnumerateDirectories()
+                    : collection.EnumerateDirectories(searchPattern, SearchOption.AllDirectories);
+                foreach (var dir in sampleCollection)
                 {
                     var subSollection = new DirectoryInfo(dir.FullName);
                     bool isEmpty = CheckEmpty(subSollection);
@@ -87,26 +77,16 @@ namespace FileExplorer
             return _errorMessage;
         }
 
-        public static int GetFilesCount(string directoryName)
-        {
-            var collection = new DirectoryInfo(directoryName);
-            try
-            {
-                return collection.EnumerateFiles().Count();
-            }
-            catch
-            {
-                return 0;
-            }
-        }
-
-        public static EntryInfo[] GetFilesCollection(string directoryName, int offset, int count)
+        public static EntryInfo[] GetFilesCollection(string directoryName, string searchPattern = "")
         {
             var collection = new DirectoryInfo(directoryName);
             var directories = new List<EntryInfo>();
             try
             {
-                foreach (var file in collection.EnumerateFiles().Skip(offset).Take(count))
+                var sampleCollection = string.IsNullOrWhiteSpace(searchPattern) 
+                    ? collection.EnumerateFiles()
+                    : collection.EnumerateFiles(searchPattern, SearchOption.AllDirectories);
+                foreach (var file in sampleCollection)
                 {
                     var entry = new EntryInfo
                     {

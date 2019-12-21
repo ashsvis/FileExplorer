@@ -128,7 +128,8 @@ namespace FileExplorer
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void mainListView_VirtualItemsSelectionRangeChanged(object sender, ListViewVirtualItemsSelectionRangeChangedEventArgs e)
+        private void mainListView_VirtualItemsSelectionRangeChanged(object sender, 
+            ListViewVirtualItemsSelectionRangeChangedEventArgs e)
         {
             if (!e.IsSelected)
             {
@@ -202,8 +203,7 @@ namespace FileExplorer
                 {
                     var driveNode = new TreeNodeFile(drive) { DirectoryName = drive };
                     mainTree.Nodes.Add(driveNode);
-                    var count = FileHelper.GetDirectoriesCount(drive);
-                    var collections = FileHelper.GetDirectoriesCollection(drive, 0, count);
+                    var collections = FileHelper.GetDirectoriesCollection(drive);
                     var mess = FileHelper.GetErrorMessage();
                     if (collections.Length > 0)
                         driveNode.Nodes.Add(new TreeNodeFile()); // add stub
@@ -242,8 +242,7 @@ namespace FileExplorer
         {
             mainTree.BeginUpdate();
             node.Nodes.Clear();
-            var count = FileHelper.GetDirectoriesCount(node.DirectoryName);
-            var collection = FileHelper.GetDirectoriesCollection(node.DirectoryName, 0, count);
+            var collection = FileHelper.GetDirectoriesCollection(node.DirectoryName);
             foreach (var dir in collection)
             {
                 var fileName = dir.FullName.Substring(node.DirectoryName.Length);
@@ -255,8 +254,7 @@ namespace FileExplorer
                 dirNode.Text = Path.GetFileName(dir.FullName);
                 node.Nodes.Add(dirNode);
                 // уточнение существующей вложенности каталогов
-                count = FileHelper.GetDirectoriesCount(dir.FullName);
-                var collections = FileHelper.GetDirectoriesCollection(dir.FullName, 0, count);
+                var collections = FileHelper.GetDirectoriesCollection(dir.FullName);
                 var mess = FileHelper.GetErrorMessage();
                 if (collections.Length > 0)
                     dirNode.Nodes.Add(new TreeNodeFile()); // add stub
@@ -292,11 +290,11 @@ namespace FileExplorer
         {
             var node = e.Node as TreeNodeFile;
             if (node == null) return;
-            tsslPath.Text = node.FullPath;
+            tsslPath.Text = node.DirectoryName;
             FillList();
             try
             {
-                fileSystemWatcher1.Path = node.FullPath;
+                fileSystemWatcher1.Path = node.DirectoryName;
             }
             catch (Exception ex)
             {
@@ -307,7 +305,7 @@ namespace FileExplorer
         /// <summary>
         /// Заполнение виртуального списка файлов
         /// </summary>
-        private void FillList()
+        private void FillList(string searchPattern = "")
         {
             try
             {
@@ -318,25 +316,11 @@ namespace FileExplorer
                 files.Clear();
                 var node = (TreeNodeFile)mainTree.SelectedNode;
                 if (node == null) return;
+                var searchMode = !string.IsNullOrWhiteSpace(searchPattern);
                 // загрузка имён папок
-                var count = FileHelper.GetDirectoriesCount(node.DirectoryName);
                 var list = new List<EntryInfo>();
-                var collections = FileHelper.GetDirectoriesCollection(node.FullPath, 0, count);
+                var collections = FileHelper.GetDirectoriesCollection(node.DirectoryName /* FullPath */, searchPattern);
                 list.AddRange(collections);
-                #region сегментация отключена
-                //var offset = 0;
-                //while (count > 0)
-                //{
-                //    list.AddRange(FileHelper.GetDirectoriesCollection(node.DirectoryName, offset, count > 100 ? 100 : count));
-                //    if (count > 100)
-                //    {
-                //        count -= 100;
-                //        offset += 100;
-                //    }
-                //    else
-                //        break;
-                //}
-                #endregion
                 var folders = list.ToArray();
                 foreach (var dir in folders)
                 {
@@ -346,7 +330,7 @@ namespace FileExplorer
                     if (fileName.StartsWith("$")) continue;
                     var lvi = new ListViewItemFile()
                     {
-                        Text = Path.GetFileName(dir.FullName),
+                        Text = searchMode ? dir.FullName : Path.GetFileName(dir.FullName),
                         ImageIndex = dir.IsEmpty ? 0 : 1,
                         FileName = dir.FullName,
                         CreationTime = dir.CreationTime,
@@ -358,23 +342,8 @@ namespace FileExplorer
                     mainListView.VirtualListSize = files.Count;
                 }
                 // загрузка имён файлов
-                count = FileHelper.GetFilesCount(node.DirectoryName);
                 list = new List<EntryInfo>();
-                list.AddRange(FileHelper.GetFilesCollection(node.DirectoryName, 0, count));
-                #region  сегментация отключена
-                //offset = 0;
-                //while (count > 0)
-                //{
-                //    list.AddRange(FileHelper.GetFilesCollection(node.DirectoryName, offset, count > 100 ? 100 : count));
-                //    if (count > 100)
-                //    {
-                //        count -= 100;
-                //        offset += 100;
-                //    }
-                //    else
-                //        break;
-                //}
-                #endregion
+                list.AddRange(FileHelper.GetFilesCollection(node.DirectoryName, searchPattern));
                 var dirfiles = list.ToArray();
                 foreach (var file in dirfiles)
                 {
@@ -385,7 +354,7 @@ namespace FileExplorer
                     var index = 2; // иконка по умолчанию
                     
                     // получение иконки для exe файла
-                    var hash = Path.GetExtension(file.FullName);  //icon.GetHashCode();
+                    var hash = Path.GetExtension(file.FullName);
                     if (!icons.ContainsKey(hash))
                     {
                         var icon = Icon.ExtractAssociatedIcon(file.FullName);
@@ -398,7 +367,7 @@ namespace FileExplorer
 
                     var lvi = new ListViewItemFile()
                     {
-                        Text = Path.GetFileName(file.FullName),
+                        Text = searchMode ? file.FullName : Path.GetFileName(file.FullName),
                         ImageIndex = index,
                         FileName = file.FullName,
                         CreationTime = file.CreationTime,
@@ -836,6 +805,18 @@ namespace FileExplorer
                 return;
             }
             cmiRename.Visible = cmiOpen.Visible = toolStripMenuItem4.Visible = mainListView.SelectedIndices.Count == 1;
+        }
+
+        private void tsbFind_Click(object sender, EventArgs e)
+        {
+            var sample = tscbFindText.Text.Trim();
+            if (string.IsNullOrWhiteSpace(sample)) return;
+            if (mainTree.SelectedNode == null) return;
+            var rootFolder = ((TreeNodeFile)mainTree.SelectedNode).DirectoryName;
+            tsslPath.Text = $"Ищем \"{sample}\" в папке \"{rootFolder}\"";
+            ShowStatus($"Ищем \"{sample}\"...");
+            statusStrip2.Refresh();
+            FillList(sample);
         }
     }
 }

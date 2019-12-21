@@ -76,6 +76,7 @@
             this.cmiRename = new System.Windows.Forms.ToolStripMenuItem();
             this.contextFolderMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.cmiPaste = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -428,6 +429,7 @@
             this.toolStrip4.Dock = System.Windows.Forms.DockStyle.Fill;
             this.toolStrip4.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip4.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripLabel1,
             this.tscbFindText,
             this.tsbFind});
             this.toolStrip4.Location = new System.Drawing.Point(887, 0);
@@ -439,7 +441,8 @@
             // tscbFindText
             // 
             this.tscbFindText.Name = "tscbFindText";
-            this.tscbFindText.Size = new System.Drawing.Size(121, 25);
+            this.tscbFindText.Size = new System.Drawing.Size(121, 23);
+            this.tscbFindText.Text = "*.*";
             // 
             // tsbFind
             // 
@@ -447,8 +450,9 @@
             this.tsbFind.Image = ((System.Drawing.Image)(resources.GetObject("tsbFind.Image")));
             this.tsbFind.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.tsbFind.Name = "tsbFind";
-            this.tsbFind.Size = new System.Drawing.Size(23, 22);
+            this.tsbFind.Size = new System.Drawing.Size(23, 20);
             this.tsbFind.Text = "toolStripButton1";
+            this.tsbFind.Click += new System.EventHandler(this.tsbFind_Click);
             // 
             // statusStrip2
             // 
@@ -555,6 +559,12 @@
             this.cmiPaste.Text = "Вставить";
             this.cmiPaste.Click += new System.EventHandler(this.tsmiPaste_Click);
             // 
+            // toolStripLabel1
+            // 
+            this.toolStripLabel1.Name = "toolStripLabel1";
+            this.toolStripLabel1.Size = new System.Drawing.Size(45, 22);
+            this.toolStripLabel1.Text = "Поиск:";
+            // 
             // FileExplorerForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -643,6 +653,7 @@
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem5;
         private System.Windows.Forms.ToolStripMenuItem cmiDelete;
         private System.Windows.Forms.ToolStripMenuItem cmiRename;
+        private System.Windows.Forms.ToolStripLabel toolStripLabel1;
     }
 }
 
