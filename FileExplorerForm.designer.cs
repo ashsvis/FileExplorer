@@ -368,7 +368,7 @@
             // tableLayoutPanel1
             // 
             this.tableLayoutPanel1.ColumnCount = 3;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 5F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel1.Controls.Add(this.statusStrip1, 0, 3);
@@ -397,7 +397,7 @@
             this.tsbForward});
             this.toolStrip2.Location = new System.Drawing.Point(0, 0);
             this.toolStrip2.Name = "toolStrip2";
-            this.toolStrip2.Size = new System.Drawing.Size(49, 25);
+            this.toolStrip2.Size = new System.Drawing.Size(5, 25);
             this.toolStrip2.TabIndex = 2;
             this.toolStrip2.Text = "toolStrip2";
             // 
@@ -408,8 +408,9 @@
             this.tsbBack.Image = ((System.Drawing.Image)(resources.GetObject("tsbBack.Image")));
             this.tsbBack.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.tsbBack.Name = "tsbBack";
-            this.tsbBack.Size = new System.Drawing.Size(23, 22);
+            this.tsbBack.Size = new System.Drawing.Size(23, 20);
             this.tsbBack.Text = "Назад";
+            this.tsbBack.Visible = false;
             // 
             // tsbForward
             // 
@@ -418,8 +419,9 @@
             this.tsbForward.Image = ((System.Drawing.Image)(resources.GetObject("tsbForward.Image")));
             this.tsbForward.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.tsbForward.Name = "tsbForward";
-            this.tsbForward.Size = new System.Drawing.Size(23, 22);
+            this.tsbForward.Size = new System.Drawing.Size(23, 20);
             this.tsbForward.Text = "Вперёд";
+            this.tsbForward.Visible = false;
             // 
             // toolStrip4
             // 
@@ -454,9 +456,9 @@
             this.statusStrip2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.statusStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.tsslPath});
-            this.statusStrip2.Location = new System.Drawing.Point(49, 0);
+            this.statusStrip2.Location = new System.Drawing.Point(5, 0);
             this.statusStrip2.Name = "statusStrip2";
-            this.statusStrip2.Size = new System.Drawing.Size(838, 25);
+            this.statusStrip2.Size = new System.Drawing.Size(882, 25);
             this.statusStrip2.SizingGrip = false;
             this.statusStrip2.TabIndex = 5;
             this.statusStrip2.Text = "statusStrip2";
@@ -464,9 +466,6 @@
             // tsslPath
             // 
             this.tsslPath.BackColor = System.Drawing.SystemColors.Window;
-            this.tsslPath.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top) 
-            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right) 
-            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
             this.tsslPath.Name = "tsslPath";
             this.tsslPath.Size = new System.Drawing.Size(823, 20);
             this.tsslPath.Spring = true;
@@ -492,7 +491,7 @@
             this.cmiDelete,
             this.cmiRename});
             this.contextItemsMenu.Name = "contextItemsMenu";
-            this.contextItemsMenu.Size = new System.Drawing.Size(181, 148);
+            this.contextItemsMenu.Size = new System.Drawing.Size(162, 126);
             this.contextItemsMenu.Opening += new System.ComponentModel.CancelEventHandler(this.contextItemsMenu_Opening);
             // 
             // cmiOpen
