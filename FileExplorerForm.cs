@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Collections;
 using System.Diagnostics;
+using System.Collections.Specialized;
 
 namespace FileExplorer
 {
@@ -808,7 +809,8 @@ namespace FileExplorer
                 e.Cancel = true;
                 return;
             }
-            cmiRename.Visible = cmiOpen.Visible = toolStripMenuItem4.Visible = mainListView.SelectedIndices.Count == 1;
+            cmiRename.Visible = cmiOpen.Visible = toolStripMenuItem4.Visible =
+                cmiProperties.Visible = toolStripMenuItem6.Visible = mainListView.SelectedIndices.Count == 1;
         }
 
         private void tsbFind_Click(object sender, EventArgs e)
@@ -821,6 +823,65 @@ namespace FileExplorer
             ShowStatus($"Ищем \"{sample}\"...");
             statusStrip2.Refresh();
             FillVirtualList(sample);
+        }
+
+        private void cmiProperties_Click(object sender, EventArgs e)
+        {
+            if (mainListView.SelectedIndices.Count != 1 || mainTree.SelectedNode == null) return;
+            var item = files[mainListView.SelectedIndices[0]];
+            var dir = Path.GetDirectoryName(item.FileName);
+            var file = Path.GetFileName(item.FileName);
+            ShowProperties(dir, file);
+        }
+
+        private static void ShowProperties(string dir, string file)
+        {
+            var shellAppType = Type.GetTypeFromProgID("Shell.Application");
+            dynamic shell = Activator.CreateInstance(shellAppType);
+            var folder = shell.NameSpace(dir);
+            if (folder == null) return;
+            var folderItem = folder.ParseName(file);
+            var names = new Dictionary<int, string>();
+            for (var idx = 0; idx < short.MaxValue; idx++)
+            {
+                var key = (string)folder.GetDetailsOf(null, idx);
+                if (!string.IsNullOrEmpty(key))
+                {
+                    names.Add(idx, key);
+                }
+            }
+            var properties = new NameValueCollection();
+            foreach (var idx in names.Keys.OrderBy(x => x))
+            {
+                var value = (string)folder.GetDetailsOf(folderItem, idx);
+                if (!string.IsNullOrEmpty(value))
+                    properties[names[idx]] = value;
+            }
+            var frm = new PropertiesForm(properties);
+            frm.ShowDialog();
+        }
+
+        private void contextTreeMenu_Opening(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (mainTree.SelectedNode == null)
+            {
+                e.Cancel = true;
+                return;
+            }
+        }
+
+        private void treeProperties_Click(object sender, EventArgs e)
+        {
+            if (mainTree.SelectedNode == null) return;
+            var item = (TreeNodeFile)mainTree.SelectedNode;
+            var dir = Path.GetDirectoryName(item.DirectoryName);
+            var file = Path.GetFileName(item.DirectoryName);
+            ShowProperties(dir, file);
+        }
+
+        private void mainTree_MouseDown(object sender, MouseEventArgs e)
+        {
+            mainTree.SelectedNode = mainTree.GetNodeAt(e.Location);
         }
     }
 }

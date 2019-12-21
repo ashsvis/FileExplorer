@@ -61,6 +61,7 @@
             this.tsbBack = new System.Windows.Forms.ToolStripButton();
             this.tsbForward = new System.Windows.Forms.ToolStripButton();
             this.toolStrip4 = new System.Windows.Forms.ToolStrip();
+            this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
             this.tscbFindText = new System.Windows.Forms.ToolStripComboBox();
             this.tsbFind = new System.Windows.Forms.ToolStripButton();
             this.statusStrip2 = new System.Windows.Forms.StatusStrip();
@@ -76,7 +77,10 @@
             this.cmiRename = new System.Windows.Forms.ToolStripMenuItem();
             this.contextFolderMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.cmiPaste = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
+            this.toolStripMenuItem6 = new System.Windows.Forms.ToolStripSeparator();
+            this.cmiProperties = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextTreeMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.treeProperties = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -94,6 +98,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.fileSystemWatcher1)).BeginInit();
             this.contextItemsMenu.SuspendLayout();
             this.contextFolderMenu.SuspendLayout();
+            this.contextTreeMenu.SuspendLayout();
             this.SuspendLayout();
             // 
             // statusStrip1
@@ -144,6 +149,7 @@
             // 
             // mainTree
             // 
+            this.mainTree.ContextMenuStrip = this.contextTreeMenu;
             this.mainTree.Dock = System.Windows.Forms.DockStyle.Fill;
             this.mainTree.FullRowSelect = true;
             this.mainTree.HideSelection = false;
@@ -158,6 +164,7 @@
             this.mainTree.TabIndex = 0;
             this.mainTree.BeforeExpand += new System.Windows.Forms.TreeViewCancelEventHandler(this.mainTree_BeforeExpand);
             this.mainTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.mainTree_AfterSelect);
+            this.mainTree.MouseDown += new System.Windows.Forms.MouseEventHandler(this.mainTree_MouseDown);
             // 
             // imageList1
             // 
@@ -432,16 +439,22 @@
             this.toolStripLabel1,
             this.tscbFindText,
             this.tsbFind});
-            this.toolStrip4.Location = new System.Drawing.Point(887, 0);
+            this.toolStrip4.Location = new System.Drawing.Point(842, 0);
             this.toolStrip4.Name = "toolStrip4";
-            this.toolStrip4.Size = new System.Drawing.Size(149, 25);
+            this.toolStrip4.Size = new System.Drawing.Size(194, 25);
             this.toolStrip4.TabIndex = 4;
             this.toolStrip4.Text = "toolStrip4";
+            // 
+            // toolStripLabel1
+            // 
+            this.toolStripLabel1.Name = "toolStripLabel1";
+            this.toolStripLabel1.Size = new System.Drawing.Size(45, 22);
+            this.toolStripLabel1.Text = "Поиск:";
             // 
             // tscbFindText
             // 
             this.tscbFindText.Name = "tscbFindText";
-            this.tscbFindText.Size = new System.Drawing.Size(121, 23);
+            this.tscbFindText.Size = new System.Drawing.Size(121, 25);
             this.tscbFindText.Text = "*.*";
             // 
             // tsbFind
@@ -450,7 +463,7 @@
             this.tsbFind.Image = ((System.Drawing.Image)(resources.GetObject("tsbFind.Image")));
             this.tsbFind.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.tsbFind.Name = "tsbFind";
-            this.tsbFind.Size = new System.Drawing.Size(23, 20);
+            this.tsbFind.Size = new System.Drawing.Size(23, 22);
             this.tsbFind.Text = "toolStripButton1";
             this.tsbFind.Click += new System.EventHandler(this.tsbFind_Click);
             // 
@@ -462,7 +475,7 @@
             this.tsslPath});
             this.statusStrip2.Location = new System.Drawing.Point(5, 0);
             this.statusStrip2.Name = "statusStrip2";
-            this.statusStrip2.Size = new System.Drawing.Size(882, 25);
+            this.statusStrip2.Size = new System.Drawing.Size(837, 25);
             this.statusStrip2.SizingGrip = false;
             this.statusStrip2.TabIndex = 5;
             this.statusStrip2.Text = "statusStrip2";
@@ -471,7 +484,7 @@
             // 
             this.tsslPath.BackColor = System.Drawing.SystemColors.Window;
             this.tsslPath.Name = "tsslPath";
-            this.tsslPath.Size = new System.Drawing.Size(823, 20);
+            this.tsslPath.Size = new System.Drawing.Size(822, 20);
             this.tsslPath.Spring = true;
             this.tsslPath.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -493,54 +506,56 @@
             this.cmiCopy,
             this.toolStripMenuItem5,
             this.cmiDelete,
-            this.cmiRename});
+            this.cmiRename,
+            this.toolStripMenuItem6,
+            this.cmiProperties});
             this.contextItemsMenu.Name = "contextItemsMenu";
-            this.contextItemsMenu.Size = new System.Drawing.Size(162, 126);
+            this.contextItemsMenu.Size = new System.Drawing.Size(162, 154);
             this.contextItemsMenu.Opening += new System.ComponentModel.CancelEventHandler(this.contextItemsMenu_Opening);
             // 
             // cmiOpen
             // 
             this.cmiOpen.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this.cmiOpen.Name = "cmiOpen";
-            this.cmiOpen.Size = new System.Drawing.Size(180, 22);
+            this.cmiOpen.Size = new System.Drawing.Size(161, 22);
             this.cmiOpen.Text = "Открыть";
             this.cmiOpen.Click += new System.EventHandler(this.tsbOpen_Click);
             // 
             // toolStripMenuItem4
             // 
             this.toolStripMenuItem4.Name = "toolStripMenuItem4";
-            this.toolStripMenuItem4.Size = new System.Drawing.Size(177, 6);
+            this.toolStripMenuItem4.Size = new System.Drawing.Size(158, 6);
             // 
             // cmiCut
             // 
             this.cmiCut.Name = "cmiCut";
-            this.cmiCut.Size = new System.Drawing.Size(180, 22);
+            this.cmiCut.Size = new System.Drawing.Size(161, 22);
             this.cmiCut.Text = "Переместить";
             this.cmiCut.Click += new System.EventHandler(this.tsmiCut_Click);
             // 
             // cmiCopy
             // 
             this.cmiCopy.Name = "cmiCopy";
-            this.cmiCopy.Size = new System.Drawing.Size(180, 22);
+            this.cmiCopy.Size = new System.Drawing.Size(161, 22);
             this.cmiCopy.Text = "Копировать";
             this.cmiCopy.Click += new System.EventHandler(this.tsmiCopy_Click);
             // 
             // toolStripMenuItem5
             // 
             this.toolStripMenuItem5.Name = "toolStripMenuItem5";
-            this.toolStripMenuItem5.Size = new System.Drawing.Size(177, 6);
+            this.toolStripMenuItem5.Size = new System.Drawing.Size(158, 6);
             // 
             // cmiDelete
             // 
             this.cmiDelete.Name = "cmiDelete";
-            this.cmiDelete.Size = new System.Drawing.Size(180, 22);
+            this.cmiDelete.Size = new System.Drawing.Size(161, 22);
             this.cmiDelete.Text = "Удалить";
             this.cmiDelete.Click += new System.EventHandler(this.tsmiRemove_Click);
             // 
             // cmiRename
             // 
             this.cmiRename.Name = "cmiRename";
-            this.cmiRename.Size = new System.Drawing.Size(180, 22);
+            this.cmiRename.Size = new System.Drawing.Size(161, 22);
             this.cmiRename.Text = "Переименовать";
             this.cmiRename.Click += new System.EventHandler(this.tsmiRename_Click);
             // 
@@ -559,11 +574,32 @@
             this.cmiPaste.Text = "Вставить";
             this.cmiPaste.Click += new System.EventHandler(this.tsmiPaste_Click);
             // 
-            // toolStripLabel1
+            // toolStripMenuItem6
             // 
-            this.toolStripLabel1.Name = "toolStripLabel1";
-            this.toolStripLabel1.Size = new System.Drawing.Size(45, 22);
-            this.toolStripLabel1.Text = "Поиск:";
+            this.toolStripMenuItem6.Name = "toolStripMenuItem6";
+            this.toolStripMenuItem6.Size = new System.Drawing.Size(158, 6);
+            // 
+            // cmiProperties
+            // 
+            this.cmiProperties.Name = "cmiProperties";
+            this.cmiProperties.Size = new System.Drawing.Size(161, 22);
+            this.cmiProperties.Text = "Свойства";
+            this.cmiProperties.Click += new System.EventHandler(this.cmiProperties_Click);
+            // 
+            // contextTreeMenu
+            // 
+            this.contextTreeMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.treeProperties});
+            this.contextTreeMenu.Name = "contextTreeMenu";
+            this.contextTreeMenu.Size = new System.Drawing.Size(126, 26);
+            this.contextTreeMenu.Opening += new System.ComponentModel.CancelEventHandler(this.contextTreeMenu_Opening);
+            // 
+            // treeProperties
+            // 
+            this.treeProperties.Name = "treeProperties";
+            this.treeProperties.Size = new System.Drawing.Size(180, 22);
+            this.treeProperties.Text = "Свойства";
+            this.treeProperties.Click += new System.EventHandler(this.treeProperties_Click);
             // 
             // FileExplorerForm
             // 
@@ -602,6 +638,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.fileSystemWatcher1)).EndInit();
             this.contextItemsMenu.ResumeLayout(false);
             this.contextFolderMenu.ResumeLayout(false);
+            this.contextTreeMenu.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -654,6 +691,10 @@
         private System.Windows.Forms.ToolStripMenuItem cmiDelete;
         private System.Windows.Forms.ToolStripMenuItem cmiRename;
         private System.Windows.Forms.ToolStripLabel toolStripLabel1;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem6;
+        private System.Windows.Forms.ToolStripMenuItem cmiProperties;
+        private System.Windows.Forms.ContextMenuStrip contextTreeMenu;
+        private System.Windows.Forms.ToolStripMenuItem treeProperties;
     }
 }
 
