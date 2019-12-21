@@ -536,6 +536,7 @@ namespace FileExplorer
             var node = (TreeNodeFile)mainTree.SelectedNode;
             if (node == null) return;
             var newFolderName = FileHelper.AddNewFolderIn(node.DirectoryName);
+            node.Nodes.Add(new TreeNodeFile()); // add stub
             internalop = true;
             FillList();
             FindLabel(newFolderName);
@@ -576,10 +577,13 @@ namespace FileExplorer
             {
                 try
                 {
+                    var folders = false;
                     Cursor = Cursors.WaitCursor;
                     foreach (var index in mainListView.SelectedIndices.Cast<int>())
                     {
                         var item = files[index];
+                        if (item.IsFolder)
+                            folders = true;
                         try
                         {
                             FileHelper.MoveFileToRecycleBin(item.FileName);
@@ -589,6 +593,11 @@ namespace FileExplorer
                             ShowStatus($"Не удалось удалить файл {item.FileName}: {ex.Message}");
                             continue;
                         }
+                    }
+                    if (folders)
+                    {
+                        mainTree.SelectedNode.Collapse();
+                        mainTree.SelectedNode.Expand();
                     }
                 }
                 finally
@@ -689,6 +698,11 @@ namespace FileExplorer
 
         private void contextItemsMenu_Opening(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            if (files.Count == 0)
+            {
+                e.Cancel = true;
+                return;
+            }
             cmiRename.Visible = cmiOpen.Visible = toolStripMenuItem4.Visible = mainListView.SelectedIndices.Count == 1;
         }
     }
