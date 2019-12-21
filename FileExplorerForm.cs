@@ -88,7 +88,7 @@ namespace FileExplorer
                 Directory.Move(oldName, newName);
             else
                 File.Move(oldName, newName);
-            FillList();
+            FillVirtualList();
             FindLabel(newName);
         }
 
@@ -186,13 +186,13 @@ namespace FileExplorer
         /// <param name="e"></param>
         private void FileExplorerForm_Load(object sender, EventArgs e)
         {
-            FillDataFiles();
+            FillFoldersTree();
         }
 
         /// <summary>
         /// Заполнение дерева каталогов
         /// </summary>
-        private void FillDataFiles()
+        private void FillFoldersTree()
         {
             var logicalDrives = FileHelper.GetLogicalDrives();
             var method = new MethodInvoker(() =>
@@ -238,6 +238,10 @@ namespace FileExplorer
             }
         }
 
+        /// <summary>
+        /// Выполняется перед разворачиванием содержимого узла
+        /// </summary>
+        /// <param name="node"></param>
         private void NodeBeforeExpand(TreeNodeFile node)
         {
             mainTree.BeginUpdate();
@@ -291,7 +295,7 @@ namespace FileExplorer
             var node = e.Node as TreeNodeFile;
             if (node == null) return;
             tsslPath.Text = node.DirectoryName;
-            FillList();
+            FillVirtualList();
             try
             {
                 fileSystemWatcher1.Path = node.DirectoryName;
@@ -305,21 +309,22 @@ namespace FileExplorer
         /// <summary>
         /// Заполнение виртуального списка файлов
         /// </summary>
-        private void FillList(string searchPattern = "")
+        private void FillVirtualList(string searchPattern = "")
         {
             try
             {
                 Cursor = Cursors.WaitCursor;
                 tsbOpen.Visible = false;
-                mainListView.BeginUpdate();
                 mainListView.VirtualListSize = 0;
                 files.Clear();
+                var searchMode = !string.IsNullOrWhiteSpace(searchPattern);
+                if (searchMode) Refresh();
+                mainListView.BeginUpdate();
                 var node = (TreeNodeFile)mainTree.SelectedNode;
                 if (node == null) return;
-                var searchMode = !string.IsNullOrWhiteSpace(searchPattern);
                 // загрузка имён папок
                 var list = new List<EntryInfo>();
-                var collections = FileHelper.GetDirectoriesCollection(node.DirectoryName /* FullPath */, searchPattern);
+                var collections = FileHelper.GetDirectoriesCollection(node.DirectoryName, searchPattern);
                 list.AddRange(collections);
                 var folders = list.ToArray();
                 foreach (var dir in folders)
@@ -364,7 +369,6 @@ namespace FileExplorer
                     }
                     else
                         index = (int)icons[hash];
-
                     var lvi = new ListViewItemFile()
                     {
                         Text = searchMode ? file.FullName : Path.GetFileName(file.FullName),
@@ -538,7 +542,7 @@ namespace FileExplorer
             var newFolderName = FileHelper.AddNewFolderIn(node.DirectoryName);
             node.Nodes.Add(new TreeNodeFile()); // add stub
             internalop = true;
-            FillList();
+            FillVirtualList();
             FindLabel(newFolderName);
         }
 
@@ -604,7 +608,7 @@ namespace FileExplorer
                 {
                     Cursor = Cursors.Default;
                 }
-                FillList();
+                FillVirtualList();
             }
         }
 
@@ -779,7 +783,7 @@ namespace FileExplorer
                 internalop = false;
                 return;
             }
-            FillList();
+            FillVirtualList();
         }
 
         private void fileSystemWatcher1_Renamed(object sender, RenamedEventArgs e)
@@ -789,7 +793,7 @@ namespace FileExplorer
                 internalop = false;
                 return;
             }
-            FillList();
+            FillVirtualList();
         }
 
         private void contextFolderMenu_Opening(object sender, System.ComponentModel.CancelEventArgs e)
@@ -816,7 +820,7 @@ namespace FileExplorer
             tsslPath.Text = $"Ищем \"{sample}\" в папке \"{rootFolder}\"";
             ShowStatus($"Ищем \"{sample}\"...");
             statusStrip2.Refresh();
-            FillList(sample);
+            FillVirtualList(sample);
         }
     }
 }

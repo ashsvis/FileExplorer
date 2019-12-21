@@ -27,8 +27,8 @@ namespace FileExplorer
                     : collection.EnumerateDirectories(searchPattern, SearchOption.AllDirectories);
                 foreach (var dir in sampleCollection)
                 {
-                    var subSollection = new DirectoryInfo(dir.FullName);
-                    bool isEmpty = CheckEmpty(subSollection);
+                    var subCollection = new DirectoryInfo(dir.FullName);
+                    bool isEmpty = CheckEmpty(subCollection);
                     var entry = new EntryInfo
                     {
                         FullName = dir.FullName,
@@ -83,7 +83,7 @@ namespace FileExplorer
             var directories = new List<EntryInfo>();
             try
             {
-                var sampleCollection = string.IsNullOrWhiteSpace(searchPattern) 
+                var sampleCollection = string.IsNullOrWhiteSpace(searchPattern)
                     ? collection.EnumerateFiles()
                     : collection.EnumerateFiles(searchPattern, SearchOption.AllDirectories);
                 foreach (var file in sampleCollection)
