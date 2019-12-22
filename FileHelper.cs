@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 namespace FileExplorer
 {
@@ -14,6 +15,13 @@ namespace FileExplorer
         public static DateTime GetDate()
         {
             return DateTime.Now;
+        }
+
+        public static Task<EntryInfo[]> GetDirectoriesCollectionAsync(string directoryName, string searchPattern = "")
+        {
+            var task = new Task<EntryInfo[]>(() => GetDirectoriesCollection(directoryName, searchPattern));
+            task.Start();
+            return task;
         }
 
         public static EntryInfo[] GetDirectoriesCollection(string directoryName, string searchPattern = "")
@@ -77,6 +85,13 @@ namespace FileExplorer
             return _errorMessage;
         }
 
+        public static Task<EntryInfo[]> GetFilesCollectionAsync(string directoryName, string searchPattern = "")
+        {
+            var task = new Task<EntryInfo[]>(() => GetFilesCollection(directoryName, searchPattern));
+            task.Start();
+            return task;
+        }
+
         public static EntryInfo[] GetFilesCollection(string directoryName, string searchPattern = "")
         {
             var collection = new DirectoryInfo(directoryName);
@@ -117,6 +132,13 @@ namespace FileExplorer
                 _errorMessage = $" ({e.Message})";
                 return directories.ToArray();
             }
+        }
+
+        public static Task<string[]> GetLogicalDrivesAsync()
+        {
+            var task = new Task<string[]>(GetLogicalDrives);
+            task.Start();
+            return task;
         }
 
         public static string[] GetLogicalDrives()

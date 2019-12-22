@@ -193,29 +193,23 @@ namespace FileExplorer
         /// <summary>
         /// Заполнение дерева каталогов
         /// </summary>
-        private void FillFoldersTree()
+        private async void FillFoldersTree()
         {
-            var logicalDrives = FileHelper.GetLogicalDrives();
-            var method = new MethodInvoker(() =>
+            var logicalDrives = await FileHelper.GetLogicalDrivesAsync();
+            if (mainTree.Nodes.Count > 0) return;
+            foreach (var drive in logicalDrives)
             {
-                if (mainTree.Nodes.Count > 0) return;
-                mainTree.Nodes.Clear();
-                foreach (var drive in logicalDrives)
-                {
-                    var driveNode = new TreeNodeFile(drive) { DirectoryName = drive };
-                    mainTree.Nodes.Add(driveNode);
-                    var collections = FileHelper.GetDirectoriesCollection(drive);
-                    var mess = FileHelper.GetErrorMessage();
-                    if (collections.Length > 0)
-                        driveNode.Nodes.Add(new TreeNodeFile()); // add stub
-                    else
-                        driveNode.Text += $"{mess}";
-                    if (collections.Length > 0)
-                        driveNode.ImageIndex = driveNode.SelectedImageIndex = 1;
-                }
-                mainListView.ResizeColumns(0);
-            });
-            if (InvokeRequired) BeginInvoke(method);  else  method();
+                var driveNode = new TreeNodeFile(drive) { DirectoryName = drive };
+                mainTree.Nodes.Add(driveNode);
+                var collections = await FileHelper.GetDirectoriesCollectionAsync(drive);
+                var mess = FileHelper.GetErrorMessage();
+                if (collections.Length > 0)
+                    driveNode.Nodes.Add(new TreeNodeFile()); // add stub
+                else
+                    driveNode.Text += $"{mess}";
+                driveNode.ImageIndex = driveNode.SelectedImageIndex = collections.Length > 0 ? 0 : 1;
+            }
+            mainListView.ResizeColumns(0);
         }
 
         /// <summary>
@@ -227,25 +221,15 @@ namespace FileExplorer
         {
             var node = e.Node as TreeNodeFile;
             if (node == null) return;
-            try
-            {
-                Cursor = Cursors.WaitCursor;
-                NodeBeforeExpand(node);
-            }
-            finally
-            {
-                mainTree.EndUpdate();
-                Cursor = Cursors.Default;
-            }
+            NodeBeforeExpand(node);
         }
 
         /// <summary>
         /// Выполняется перед разворачиванием содержимого узла
         /// </summary>
         /// <param name="node"></param>
-        private void NodeBeforeExpand(TreeNodeFile node)
+        private async void NodeBeforeExpand(TreeNodeFile node)
         {
-            mainTree.BeginUpdate();
             node.Nodes.Clear();
             var collection = FileHelper.GetDirectoriesCollection(node.DirectoryName);
             foreach (var dir in collection)
@@ -259,31 +243,17 @@ namespace FileExplorer
                 dirNode.Text = Path.GetFileName(dir.FullName);
                 node.Nodes.Add(dirNode);
                 // уточнение существующей вложенности каталогов
-                var collections = FileHelper.GetDirectoriesCollection(dir.FullName);
+                var collections = await FileHelper.GetDirectoriesCollectionAsync(dir.FullName);
                 var mess = FileHelper.GetErrorMessage();
                 if (collections.Length > 0)
+                {
                     dirNode.Nodes.Add(new TreeNodeFile()); // add stub
+                }
                 else
                     dirNode.Text += $"{mess}";
                 if (!dir.IsEmpty)
                     dirNode.ImageIndex = dirNode.SelectedImageIndex = 1;
             }
-        }
-
-        /// <summary>
-        /// Получение очередного элемента для виртуального списка
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void mainListView_RetrieveVirtualItem(object sender, RetrieveVirtualItemEventArgs e)
-        {
-            e.Item = new ListViewItem();
-            var item = files[e.ItemIndex];
-            e.Item.Text = item.Text;
-            e.Item.ImageIndex = item.ImageIndex;
-            e.Item.SubItems.Add(item.LastWriteTime.ToString("dd.MM.yyyy HH:mm"));
-            e.Item.SubItems.Add(item.IsFolder ? "Папка с файлами" : $"Файл {Path.GetExtension(item.Text)}");
-            e.Item.SubItems.Add(item.IsFolder ? "" : item.Length.ToString("### ### ### ##0"));
         }
 
         /// <summary>
@@ -308,92 +278,98 @@ namespace FileExplorer
         }
 
         /// <summary>
+        /// Получение очередного элемента для виртуального списка
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void mainListView_RetrieveVirtualItem(object sender, RetrieveVirtualItemEventArgs e)
+        {
+            e.Item = new ListViewItem();
+            var item = files[e.ItemIndex];
+            e.Item.Text = item.Text;
+            e.Item.ImageIndex = item.ImageIndex;
+            e.Item.SubItems.Add(item.LastWriteTime.ToString("dd.MM.yyyy HH:mm"));
+            e.Item.SubItems.Add(item.IsFolder ? "Папка с файлами" : $"Файл {Path.GetExtension(item.Text)}");
+            e.Item.SubItems.Add(item.IsFolder ? "" : item.Length.ToString("### ### ### ##0"));
+        }
+
+        /// <summary>
         /// Заполнение виртуального списка файлов
         /// </summary>
-        private void FillVirtualList(string searchPattern = "")
+        private async void FillVirtualList(string searchPattern = "")
         {
-            try
+            tsbOpen.Visible = false;
+            mainListView.VirtualListSize = 0;
+            files.Clear();
+            var searchMode = !string.IsNullOrWhiteSpace(searchPattern);
+            if (searchMode) Refresh();
+            var node = (TreeNodeFile)mainTree.SelectedNode;
+            if (node == null) return;
+            // загрузка имён папок
+            var list = new List<EntryInfo>();
+            var collections = await FileHelper.GetDirectoriesCollectionAsync(node.DirectoryName, searchPattern);
+            list.AddRange(collections);
+            var folders = list.ToArray();
+            foreach (var dir in folders)
             {
-                Cursor = Cursors.WaitCursor;
-                tsbOpen.Visible = false;
-                mainListView.VirtualListSize = 0;
-                files.Clear();
-                var searchMode = !string.IsNullOrWhiteSpace(searchPattern);
-                if (searchMode) Refresh();
-                mainListView.BeginUpdate();
-                var node = (TreeNodeFile)mainTree.SelectedNode;
-                if (node == null) return;
-                // загрузка имён папок
-                var list = new List<EntryInfo>();
-                var collections = FileHelper.GetDirectoriesCollection(node.DirectoryName, searchPattern);
-                list.AddRange(collections);
-                var folders = list.ToArray();
-                foreach (var dir in folders)
+                var fileName = node.DirectoryName.Length < dir.FullName.Length
+                     ? dir.FullName.Substring(node.DirectoryName.Length)
+                     : dir.FullName;
+                if (fileName.StartsWith("$")) continue;
+                var lvi = new ListViewItemFile()
                 {
-                    var fileName = node.DirectoryName.Length < dir.FullName.Length
-                         ? dir.FullName.Substring(node.DirectoryName.Length)
-                         : dir.FullName;
-                    if (fileName.StartsWith("$")) continue;
-                    var lvi = new ListViewItemFile()
-                    {
-                        Text = searchMode ? dir.FullName : Path.GetFileName(dir.FullName),
-                        ImageIndex = dir.IsEmpty ? 0 : 1,
-                        FileName = dir.FullName,
-                        CreationTime = dir.CreationTime,
-                        LastAccessTime = dir.LastAccessTime,
-                        LastWriteTime = dir.LastWriteTime,
-                        IsFolder = true
-                    };
-                    files.Add(lvi);
-                    mainListView.VirtualListSize = files.Count;
-                }
-                // загрузка имён файлов
-                list = new List<EntryInfo>();
-                list.AddRange(FileHelper.GetFilesCollection(node.DirectoryName, searchPattern));
-                var dirfiles = list.ToArray();
-                foreach (var file in dirfiles)
-                {
-                    var fileName = node.DirectoryName.Length < file.FullName.Length 
-                         ? file.FullName.Substring(node.DirectoryName.Length)
-                         : file.FullName;
-                    if (fileName.StartsWith("$")) continue;
-                    var index = 2; // иконка по умолчанию
-                    
-                    // получение иконки для exe файла
-                    var hash = Path.GetExtension(file.FullName);
-                    if (!icons.ContainsKey(hash))
-                    {
-                        var icon = Icon.ExtractAssociatedIcon(file.FullName);
-                        imageList1.Images.Add(icon);
-                        index = imageList1.Images.Count - 1;
-                        icons[hash] = index;
-                    }
-                    else
-                        index = (int)icons[hash];
-                    var lvi = new ListViewItemFile()
-                    {
-                        Text = searchMode ? file.FullName : Path.GetFileName(file.FullName),
-                        ImageIndex = index,
-                        FileName = file.FullName,
-                        CreationTime = file.CreationTime,
-                        LastAccessTime = file.LastAccessTime,
-                        LastWriteTime = file.LastWriteTime,
-                        Length = file.Length,
-                        IsFolder = false
-                    };
-                    files.Add(lvi);
-                    mainListView.VirtualListSize = files.Count;
-                }
-                files.Sort(FileComparer);
-                ShowStatus($"Показано каталогов: {folders.Length} и файлов: {dirfiles.Length}");
-                mainListView.ResizeColumns(0);
-                mainListView.ContextMenuStrip = contextFolderMenu;
+                    Text = searchMode ? dir.FullName : Path.GetFileName(dir.FullName),
+                    ImageIndex = dir.IsEmpty ? 0 : 1,
+                    FileName = dir.FullName,
+                    CreationTime = dir.CreationTime,
+                    LastAccessTime = dir.LastAccessTime,
+                    LastWriteTime = dir.LastWriteTime,
+                    IsFolder = true
+                };
+                files.Add(lvi);
+                mainListView.VirtualListSize = files.Count;
             }
-            finally
+            // загрузка имён файлов
+            list = new List<EntryInfo>();
+            list.AddRange(await FileHelper.GetFilesCollectionAsync(node.DirectoryName, searchPattern));
+            var dirfiles = list.ToArray();
+            foreach (var file in dirfiles)
             {
-                mainListView.EndUpdate();
-                Cursor = Cursors.Default;
+                var fileName = node.DirectoryName.Length < file.FullName.Length
+                     ? file.FullName.Substring(node.DirectoryName.Length)
+                     : file.FullName;
+                if (fileName.StartsWith("$")) continue;
+                var index = 2; // иконка по умолчанию
+
+                // получение иконки для exe файла
+                var hash = Path.GetExtension(file.FullName);
+                if (!icons.ContainsKey(hash))
+                {
+                    var icon = Icon.ExtractAssociatedIcon(file.FullName);
+                    imageList1.Images.Add(icon);
+                    index = imageList1.Images.Count - 1;
+                    icons[hash] = index;
+                }
+                else
+                    index = (int)icons[hash];
+                var lvi = new ListViewItemFile()
+                {
+                    Text = searchMode ? file.FullName : Path.GetFileName(file.FullName),
+                    ImageIndex = index,
+                    FileName = file.FullName,
+                    CreationTime = file.CreationTime,
+                    LastAccessTime = file.LastAccessTime,
+                    LastWriteTime = file.LastWriteTime,
+                    Length = file.Length,
+                    IsFolder = false
+                };
+                files.Add(lvi);
+                mainListView.VirtualListSize = files.Count;
             }
+            files.Sort(FileComparer);
+            ShowStatus($"Показано каталогов: {folders.Length} и файлов: {dirfiles.Length}");
+            mainListView.ResizeColumns(0);
+            mainListView.ContextMenuStrip = contextFolderMenu;
         }
 
         /// <summary>
@@ -450,23 +426,15 @@ namespace FileExplorer
                 Process.Start(item.FileName);
                 return;
             }
-            try
+            if (!mainTree.SelectedNode.IsExpanded)
+                mainTree.SelectedNode.Expand();
+            foreach (var node in mainTree.SelectedNode.Nodes.Cast<TreeNodeFile>())
             {
-                Cursor = Cursors.WaitCursor;
-                if (!mainTree.SelectedNode.IsExpanded)
-                    mainTree.SelectedNode.Expand();
-                foreach (var node in mainTree.SelectedNode.Nodes.Cast<TreeNodeFile>())
+                if (node.DirectoryName == item.FileName)
                 {
-                    if (node.DirectoryName == item.FileName)
-                    {
-                        mainTree.SelectedNode = node;
-                        break;
-                    }
+                    mainTree.SelectedNode = node;
+                    break;
                 }
-            }
-            finally
-            {
-                Cursor = Cursors.Default;
             }
         }
 
@@ -883,6 +851,7 @@ namespace FileExplorer
                 dir = item.DirectoryName;
                 var properties = new NameValueCollection();
                 var allDrives = DriveInfo.GetDrives();
+                double divider = 1024 * 1024 * 1024;
                 foreach (var drive in allDrives)
                 {
                     if (drive.Name == dir)
@@ -893,9 +862,9 @@ namespace FileExplorer
                         {
                             properties["Метка тома"] = drive.VolumeLabel;
                             properties["Файловая система"] = drive.DriveFormat;
-                            properties["Доступно пользователю"] = (drive.AvailableFreeSpace / (1024 * 1024 * 1024)).ToString() + " ГБ";
-                            properties["Всего доступно на диске"] = (drive.TotalFreeSpace / (1024 * 1024 * 1024)).ToString() + " ГБ";
-                            properties["Общий размер диска"] = (drive.TotalSize / (1024 * 1024 * 1024)).ToString() + " ГБ";
+                            properties["Доступно пользователю"] = (drive.AvailableFreeSpace / divider).ToString("0.00") + " ГБ";
+                            properties["Всего доступно на диске"] = (drive.TotalFreeSpace / divider).ToString("0.00") + " ГБ";
+                            properties["Общий размер диска"] = (drive.TotalSize / divider).ToString("0.00") + " ГБ";
                         }
                         break;
                     }
@@ -909,7 +878,7 @@ namespace FileExplorer
 
         private void mainTree_MouseDown(object sender, MouseEventArgs e)
         {
-            mainTree.SelectedNode = mainTree.GetNodeAt(e.Location);
+            //mainTree.SelectedNode = mainTree.GetNodeAt(e.Location);
         }
     }
 }
