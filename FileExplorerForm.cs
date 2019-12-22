@@ -327,8 +327,8 @@ namespace FileExplorer
                     IsFolder = true
                 };
                 files.Add(lvi);
-                mainListView.VirtualListSize = files.Count;
             }
+            mainListView.VirtualListSize = files.Count;
             // загрузка имён файлов
             list = new List<EntryInfo>();
             list.AddRange(await FileHelper.GetFilesCollectionAsync(node.DirectoryName, searchPattern));
@@ -352,6 +352,7 @@ namespace FileExplorer
                 }
                 else
                     index = (int)icons[hash];
+
                 var lvi = new ListViewItemFile()
                 {
                     Text = searchMode ? file.FullName : Path.GetFileName(file.FullName),
@@ -364,8 +365,8 @@ namespace FileExplorer
                     IsFolder = false
                 };
                 files.Add(lvi);
-                mainListView.VirtualListSize = files.Count;
             }
+            mainListView.VirtualListSize = files.Count;
             files.Sort(FileComparer);
             ShowStatus($"Показано каталогов: {folders.Length} и файлов: {dirfiles.Length}");
             mainListView.ResizeColumns(0);
@@ -577,7 +578,6 @@ namespace FileExplorer
                 {
                     Cursor = Cursors.Default;
                 }
-                FillVirtualList();
             }
         }
 
@@ -878,7 +878,8 @@ namespace FileExplorer
 
         private void mainTree_MouseDown(object sender, MouseEventArgs e)
         {
-            //mainTree.SelectedNode = mainTree.GetNodeAt(e.Location);
+            if (e.Button == MouseButtons.Right)
+                mainTree.SelectedNode = mainTree.GetNodeAt(e.Location);
         }
     }
 }

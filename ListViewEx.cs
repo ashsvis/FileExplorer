@@ -20,13 +20,20 @@ namespace FileExplorer
              System.Security.Permissions.SecurityPermissionFlag.UnmanagedCode)]
         protected override void WndProc(ref Message m)
         {
-            if (m.Msg == WmVscroll ||
-                m.Msg == WmHscroll ||
-                m.Msg == WmKeydown ||
-                m.Msg == WmMousewheel)
-                if (ScrollEvent != null)
-                    ScrollEvent(this, null);
-            base.WndProc(ref m);
+            try
+            {
+                if (m.Msg == WmVscroll ||
+                    m.Msg == WmHscroll ||
+                    m.Msg == WmKeydown ||
+                    m.Msg == WmMousewheel)
+                    if (ScrollEvent != null)
+                        ScrollEvent(this, null);
+                base.WndProc(ref m);
+            }
+            catch
+            {
+
+            }
         }
 
         public void SetDoubleBuffered(bool value)
