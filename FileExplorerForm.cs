@@ -195,6 +195,7 @@ namespace FileExplorer
         /// </summary>
         private async void FillFoldersTree()
         {
+            mainTree.UseWaitCursor = true;
             var logicalDrives = await FileHelper.GetLogicalDrivesAsync();
             if (mainTree.Nodes.Count > 0) return;
             foreach (var drive in logicalDrives)
@@ -209,6 +210,7 @@ namespace FileExplorer
                     driveNode.Text += $"{mess}";
                 driveNode.ImageIndex = driveNode.SelectedImageIndex = collections.Length > 0 ? 0 : 1;
             }
+            mainTree.UseWaitCursor = false;
             mainListView.ResizeColumns(0);
         }
 
@@ -221,7 +223,6 @@ namespace FileExplorer
         {
             var node = e.Node as TreeNodeFile;
             if (node == null) return;
-            Console.WriteLine("mainTree_BeforeExpand");
             NodeBeforeExpand(node);
         }
 
@@ -359,6 +360,7 @@ namespace FileExplorer
                 }
             }
             // загрузка имён файлов
+            mainListView.UseWaitCursor = true;
             list = new List<EntryInfo>();
             list.AddRange(await FileHelper.GetFilesCollectionAsync(node.DirectoryName, searchPattern));
             var dirfiles = list.ToArray();
@@ -400,6 +402,7 @@ namespace FileExplorer
             ShowStatus($"Показано каталогов: {folders.Length} и файлов: {dirfiles.Length}");
             mainListView.ResizeColumns(0);
             mainListView.ContextMenuStrip = contextFolderMenu;
+            mainListView.UseWaitCursor = false;
         }
 
         /// <summary>
@@ -450,21 +453,28 @@ namespace FileExplorer
         private void OpenFolderOrFile()
         {
             if (mainListView.FocusedItem == null || mainTree.SelectedNode == null) return;
-            var item = files[mainListView.FocusedItem.Index];
-            if (!item.IsFolder)
+            try
             {
-                Process.Start(item.FileName);
-                return;
-            }
-            if (!mainTree.SelectedNode.IsExpanded)
-                mainTree.SelectedNode.Expand();
-            foreach (var node in mainTree.SelectedNode.Nodes.Cast<TreeNodeFile>())
-            {
-                if (node.DirectoryName == item.FileName)
+                var item = files[mainListView.FocusedItem.Index];
+                if (!item.IsFolder)
                 {
-                    mainTree.SelectedNode = node;
-                    break;
+                    Process.Start(item.FileName);
+                    return;
                 }
+                if (!mainTree.SelectedNode.IsExpanded)
+                    mainTree.SelectedNode.Expand();
+                foreach (var node in mainTree.SelectedNode.Nodes.Cast<TreeNodeFile>())
+                {
+                    if (node.DirectoryName == item.FileName)
+                    {
+                        mainTree.SelectedNode = node;
+                        break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ShowErrorStatus(ex.Message);
             }
         }
 
