@@ -12,4 +12,6 @@ namespace FileExplorer
         public DateTime LastAccessTime { get; set; }
         public DateTime LastWriteTime { get; set; }
     }
+
+    public class TreeNodeStub : TreeNode { }
 }

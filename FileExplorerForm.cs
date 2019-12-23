@@ -204,7 +204,7 @@ namespace FileExplorer
                 var collections = await FileHelper.GetDirectoriesCollectionAsync(drive);
                 var mess = FileHelper.GetErrorMessage();
                 if (collections.Length > 0)
-                    driveNode.Nodes.Add(new TreeNodeFile()); // add stub
+                    driveNode.Nodes.Add(new TreeNodeStub());
                 else
                     driveNode.Text += $"{mess}";
                 driveNode.ImageIndex = driveNode.SelectedImageIndex = collections.Length > 0 ? 0 : 1;
@@ -221,6 +221,7 @@ namespace FileExplorer
         {
             var node = e.Node as TreeNodeFile;
             if (node == null) return;
+            Console.WriteLine("mainTree_BeforeExpand");
             NodeBeforeExpand(node);
         }
 
@@ -230,29 +231,33 @@ namespace FileExplorer
         /// <param name="node"></param>
         private async void NodeBeforeExpand(TreeNodeFile node)
         {
-            node.Nodes.Clear();
-            var collection = FileHelper.GetDirectoriesCollection(node.DirectoryName);
-            foreach (var dir in collection)
+            if (node.Nodes.Count == 1 && node.Nodes[0] is TreeNodeStub)
             {
-                var fileName = dir.FullName.Substring(node.DirectoryName.Length);
-                if (fileName.StartsWith("$")) continue;
-                var dirNode = new TreeNodeFile() { DirectoryName = dir.FullName };
-                dirNode.CreationTime = dir.CreationTime;
-                dirNode.LastAccessTime = dir.LastAccessTime;
-                dirNode.LastWriteTime = dir.LastWriteTime;
-                dirNode.Text = Path.GetFileName(dir.FullName);
-                node.Nodes.Add(dirNode);
-                // уточнение существующей вложенности каталогов
-                var collections = await FileHelper.GetDirectoriesCollectionAsync(dir.FullName);
-                var mess = FileHelper.GetErrorMessage();
-                if (collections.Length > 0)
+                node.Nodes.Clear();
+                #region в этой строке оставить синхронный вызов
+                var collection = FileHelper.GetDirectoriesCollection(node.DirectoryName);
+                #endregion
+                foreach (var dir in collection)
                 {
-                    dirNode.Nodes.Add(new TreeNodeFile()); // add stub
+                    var fileName = dir.FullName.Substring(node.DirectoryName.Length);
+                    if (fileName.StartsWith("$")) continue;
+                    var dirNode = new TreeNodeFile() { DirectoryName = dir.FullName };
+                    dirNode.CreationTime = dir.CreationTime;
+                    dirNode.LastAccessTime = dir.LastAccessTime;
+                    dirNode.LastWriteTime = dir.LastWriteTime;
+                    dirNode.Text = Path.GetFileName(dir.FullName);
+                    node.Nodes.Add(dirNode);
+                    // уточнение существующей вложенности каталогов
+                    var collections = await FileHelper.GetDirectoriesCollectionAsync(dir.FullName);
+                    var mess = FileHelper.GetErrorMessage();
+                    if (collections.Length > 0)
+                        dirNode.Nodes.Add(new TreeNodeStub());
+                    else
+                        dirNode.Text += $"{mess}";
+                    if (!dir.IsEmpty)
+                        dirNode.ImageIndex = dirNode.SelectedImageIndex = 1;
                 }
-                else
-                    dirNode.Text += $"{mess}";
-                if (!dir.IsEmpty)
-                    dirNode.ImageIndex = dirNode.SelectedImageIndex = 1;
+                FillVirtualList();
             }
         }
 
@@ -266,6 +271,7 @@ namespace FileExplorer
             var node = e.Node as TreeNodeFile;
             if (node == null) return;
             tsslPath.Text = node.DirectoryName;
+            NodeBeforeExpand(node);
             FillVirtualList();
             try
             {
@@ -306,29 +312,52 @@ namespace FileExplorer
             var node = (TreeNodeFile)mainTree.SelectedNode;
             if (node == null) return;
             // загрузка имён папок
+            var folders = new EntryInfo[] { };
             var list = new List<EntryInfo>();
-            var collections = await FileHelper.GetDirectoriesCollectionAsync(node.DirectoryName, searchPattern);
-            list.AddRange(collections);
-            var folders = list.ToArray();
-            foreach (var dir in folders)
+            if (node.Nodes.Count == 1 && node.Nodes[0] is TreeNodeStub)
             {
-                var fileName = node.DirectoryName.Length < dir.FullName.Length
-                     ? dir.FullName.Substring(node.DirectoryName.Length)
-                     : dir.FullName;
-                if (fileName.StartsWith("$")) continue;
-                var lvi = new ListViewItemFile()
+                var collections = await FileHelper.GetDirectoriesCollectionAsync(node.DirectoryName, searchPattern);
+                list.AddRange(collections);
+                folders = list.ToArray();
+                foreach (var dir in folders)
                 {
-                    Text = searchMode ? dir.FullName : Path.GetFileName(dir.FullName),
-                    ImageIndex = dir.IsEmpty ? 0 : 1,
-                    FileName = dir.FullName,
-                    CreationTime = dir.CreationTime,
-                    LastAccessTime = dir.LastAccessTime,
-                    LastWriteTime = dir.LastWriteTime,
-                    IsFolder = true
-                };
-                files.Add(lvi);
+                    var fileName = node.DirectoryName.Length < dir.FullName.Length
+                         ? dir.FullName.Substring(node.DirectoryName.Length)
+                         : dir.FullName;
+                    if (fileName.StartsWith("$")) continue;
+                    var lvi = new ListViewItemFile()
+                    {
+                        Text = searchMode ? dir.FullName : Path.GetFileName(dir.FullName),
+                        ImageIndex = dir.IsEmpty ? 0 : 1,
+                        FileName = dir.FullName,
+                        CreationTime = dir.CreationTime,
+                        LastAccessTime = dir.LastAccessTime,
+                        LastWriteTime = dir.LastWriteTime,
+                        IsFolder = true
+                    };
+                    files.Add(lvi);
+                    mainListView.VirtualListSize = files.Count;
+                }
             }
-            mainListView.VirtualListSize = files.Count;
+            else
+            {
+                foreach (var dir in node.Nodes.Cast<TreeNodeFile>())
+                {
+                    var fullName = dir.DirectoryName;
+                    var lvi = new ListViewItemFile()
+                    {
+                        Text = searchMode ? fullName : Path.GetFileName(fullName),
+                        ImageIndex = dir.Nodes.Count == 0 ? 0 : 1,
+                        FileName = fullName,
+                        CreationTime = dir.CreationTime,
+                        LastAccessTime = dir.LastAccessTime,
+                        LastWriteTime = dir.LastWriteTime,
+                        IsFolder = true
+                    };
+                    files.Add(lvi);
+                    mainListView.VirtualListSize = files.Count;
+                }
+            }
             // загрузка имён файлов
             list = new List<EntryInfo>();
             list.AddRange(await FileHelper.GetFilesCollectionAsync(node.DirectoryName, searchPattern));
@@ -365,8 +394,8 @@ namespace FileExplorer
                     IsFolder = false
                 };
                 files.Add(lvi);
+                mainListView.VirtualListSize = files.Count;
             }
-            mainListView.VirtualListSize = files.Count;
             files.Sort(FileComparer);
             ShowStatus($"Показано каталогов: {folders.Length} и файлов: {dirfiles.Length}");
             mainListView.ResizeColumns(0);
@@ -510,7 +539,7 @@ namespace FileExplorer
             var node = (TreeNodeFile)mainTree.SelectedNode;
             if (node == null) return;
             var newFolderName = FileHelper.AddNewFolderIn(node.DirectoryName);
-            node.Nodes.Add(new TreeNodeFile()); // add stub
+            node.Nodes.Add(new TreeNodeStub());
             internalop = true;
             FillVirtualList();
             FindLabel(newFolderName);
