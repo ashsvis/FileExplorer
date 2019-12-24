@@ -195,7 +195,6 @@ namespace FileExplorer
         /// </summary>
         private async void FillFoldersTree()
         {
-            mainTree.UseWaitCursor = true;
             var logicalDrives = await FileHelper.GetLogicalDrivesAsync();
             if (mainTree.Nodes.Count > 0) return;
             foreach (var drive in logicalDrives)
@@ -210,7 +209,6 @@ namespace FileExplorer
                     driveNode.Text += $"{mess}";
                 driveNode.ImageIndex = driveNode.SelectedImageIndex = collections.Length > 0 ? 0 : 1;
             }
-            mainTree.UseWaitCursor = false;
             mainListView.ResizeColumns(0);
         }
 
@@ -313,20 +311,21 @@ namespace FileExplorer
             var node = (TreeNodeFile)mainTree.SelectedNode;
             if (node == null) return;
             // загрузка имён папок
-            var folders = new EntryInfo[] { };
             var list = new List<EntryInfo>();
             var collections = await FileHelper.GetDirectoriesCollectionAsync(node.DirectoryName, searchPattern);
             list.AddRange(collections);
-            folders = list.ToArray();
+            var folders = new HashSet<EntryInfo>(list);
             foreach (var dir in folders)
             {
                 var fileName = node.DirectoryName.Length < dir.FullName.Length
                      ? dir.FullName.Substring(node.DirectoryName.Length)
                      : dir.FullName;
                 if (fileName.StartsWith("$")) continue;
+                var text = searchMode ? dir.FullName : Path.GetFileName(dir.FullName);
+
                 var lvi = new ListViewItemFile()
                 {
-                    Text = searchMode ? dir.FullName : Path.GetFileName(dir.FullName),
+                    Text = text,
                     ImageIndex = dir.IsEmpty ? 0 : 1,
                     FileName = dir.FullName,
                     CreationTime = dir.CreationTime,
@@ -339,7 +338,6 @@ namespace FileExplorer
             }
 
             // загрузка имён файлов
-            mainListView.UseWaitCursor = true;
             list = new List<EntryInfo>();
             list.AddRange(await FileHelper.GetFilesCollectionAsync(node.DirectoryName, searchPattern));
             var dirfiles = list.ToArray();
@@ -378,10 +376,9 @@ namespace FileExplorer
                 mainListView.VirtualListSize = files.Count;
             }
             files.Sort(FileComparer);
-            ShowStatus($"Показано каталогов: {folders.Length} и файлов: {dirfiles.Length}");
+            ShowStatus($"Показано каталогов: {folders.Count} и файлов: {dirfiles.Length}");
             mainListView.ResizeColumns(0);
             mainListView.ContextMenuStrip = contextFolderMenu;
-            mainListView.UseWaitCursor = false;
             if (!string.IsNullOrWhiteSpace(folderName))
                 FindLabel(folderName);
         }
