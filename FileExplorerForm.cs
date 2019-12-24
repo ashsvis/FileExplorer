@@ -89,8 +89,8 @@ namespace FileExplorer
                 Directory.Move(oldName, newName);
             else
                 File.Move(oldName, newName);
-            FillVirtualList();
-            FindLabel(newName);
+            FillVirtualList(newName);
+            //FindLabel(newName);
         }
 
         /// <summary>
@@ -303,7 +303,7 @@ namespace FileExplorer
         /// <summary>
         /// Заполнение виртуального списка файлов
         /// </summary>
-        private async void FillVirtualList(string searchPattern = "")
+        private async void FillVirtualList(string folderName = "", string searchPattern = "")
         {
             tsbOpen.Visible = false;
             mainListView.VirtualListSize = 0;
@@ -315,50 +315,29 @@ namespace FileExplorer
             // загрузка имён папок
             var folders = new EntryInfo[] { };
             var list = new List<EntryInfo>();
-            if (node.Nodes.Count == 1 && node.Nodes[0] is TreeNodeStub)
+            var collections = await FileHelper.GetDirectoriesCollectionAsync(node.DirectoryName, searchPattern);
+            list.AddRange(collections);
+            folders = list.ToArray();
+            foreach (var dir in folders)
             {
-                var collections = await FileHelper.GetDirectoriesCollectionAsync(node.DirectoryName, searchPattern);
-                list.AddRange(collections);
-                folders = list.ToArray();
-                foreach (var dir in folders)
+                var fileName = node.DirectoryName.Length < dir.FullName.Length
+                     ? dir.FullName.Substring(node.DirectoryName.Length)
+                     : dir.FullName;
+                if (fileName.StartsWith("$")) continue;
+                var lvi = new ListViewItemFile()
                 {
-                    var fileName = node.DirectoryName.Length < dir.FullName.Length
-                         ? dir.FullName.Substring(node.DirectoryName.Length)
-                         : dir.FullName;
-                    if (fileName.StartsWith("$")) continue;
-                    var lvi = new ListViewItemFile()
-                    {
-                        Text = searchMode ? dir.FullName : Path.GetFileName(dir.FullName),
-                        ImageIndex = dir.IsEmpty ? 0 : 1,
-                        FileName = dir.FullName,
-                        CreationTime = dir.CreationTime,
-                        LastAccessTime = dir.LastAccessTime,
-                        LastWriteTime = dir.LastWriteTime,
-                        IsFolder = true
-                    };
-                    files.Add(lvi);
-                    mainListView.VirtualListSize = files.Count;
-                }
+                    Text = searchMode ? dir.FullName : Path.GetFileName(dir.FullName),
+                    ImageIndex = dir.IsEmpty ? 0 : 1,
+                    FileName = dir.FullName,
+                    CreationTime = dir.CreationTime,
+                    LastAccessTime = dir.LastAccessTime,
+                    LastWriteTime = dir.LastWriteTime,
+                    IsFolder = true
+                };
+                files.Add(lvi);
+                mainListView.VirtualListSize = files.Count;
             }
-            else
-            {
-                foreach (var dir in node.Nodes.Cast<TreeNodeFile>())
-                {
-                    var fullName = dir.DirectoryName;
-                    var lvi = new ListViewItemFile()
-                    {
-                        Text = searchMode ? fullName : Path.GetFileName(fullName),
-                        ImageIndex = dir.Nodes.Count == 0 ? 0 : 1,
-                        FileName = fullName,
-                        CreationTime = dir.CreationTime,
-                        LastAccessTime = dir.LastAccessTime,
-                        LastWriteTime = dir.LastWriteTime,
-                        IsFolder = true
-                    };
-                    files.Add(lvi);
-                    mainListView.VirtualListSize = files.Count;
-                }
-            }
+
             // загрузка имён файлов
             mainListView.UseWaitCursor = true;
             list = new List<EntryInfo>();
@@ -403,6 +382,8 @@ namespace FileExplorer
             mainListView.ResizeColumns(0);
             mainListView.ContextMenuStrip = contextFolderMenu;
             mainListView.UseWaitCursor = false;
+            if (!string.IsNullOrWhiteSpace(folderName))
+                FindLabel(folderName);
         }
 
         /// <summary>
@@ -551,8 +532,8 @@ namespace FileExplorer
             var newFolderName = FileHelper.AddNewFolderIn(node.DirectoryName);
             node.Nodes.Add(new TreeNodeStub());
             internalop = true;
-            FillVirtualList();
-            FindLabel(newFolderName);
+            FillVirtualList(newFolderName);
+            //FindLabel(newFolderName);
         }
 
         private void FindLabel(string newFolderName)
@@ -829,7 +810,7 @@ namespace FileExplorer
             tsslPath.Text = $"Ищем \"{sample}\" в папке \"{rootFolder}\"";
             ShowStatus($"Ищем \"{sample}\"...");
             statusStrip2.Refresh();
-            FillVirtualList(sample);
+            FillVirtualList("", sample);
         }
 
         private void cmiProperties_Click(object sender, EventArgs e)
