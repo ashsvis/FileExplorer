@@ -301,18 +301,18 @@ namespace FileExplorer
         /// <summary>
         /// Заполнение виртуального списка файлов
         /// </summary>
-        private async void FillVirtualList(string folderName = "", string searchPattern = "")
+        private /*async*/ void FillVirtualList(string folderName = "", string searchPattern = "")
         {
             tsbOpen.Visible = false;
-            mainListView.VirtualListSize = 0;
             files.Clear();
+            mainListView.VirtualListSize = 0;
             var searchMode = !string.IsNullOrWhiteSpace(searchPattern);
             if (searchMode) Refresh();
             var node = (TreeNodeFile)mainTree.SelectedNode;
             if (node == null) return;
             // загрузка имён папок
             var list = new List<EntryInfo>();
-            var collections = await FileHelper.GetDirectoriesCollectionAsync(node.DirectoryName, searchPattern);
+            var collections = FileHelper.GetDirectoriesCollection(node.DirectoryName, searchPattern); // await FileHelper.GetDirectoriesCollectionAsync(node.DirectoryName, searchPattern);
             list.AddRange(collections);
             var folders = new HashSet<EntryInfo>(list);
             foreach (var dir in folders)
@@ -334,12 +334,13 @@ namespace FileExplorer
                     IsFolder = true
                 };
                 files.Add(lvi);
-                mainListView.VirtualListSize = files.Count;
             }
+            mainListView.VirtualListSize = files.Count;
 
             // загрузка имён файлов
             list = new List<EntryInfo>();
-            list.AddRange(await FileHelper.GetFilesCollectionAsync(node.DirectoryName, searchPattern));
+            //list.AddRange(await FileHelper.GetFilesCollectionAsync(node.DirectoryName, searchPattern));
+            list.AddRange(FileHelper.GetFilesCollection(node.DirectoryName, searchPattern));
             var dirfiles = list.ToArray();
             foreach (var file in dirfiles)
             {
@@ -373,8 +374,8 @@ namespace FileExplorer
                     IsFolder = false
                 };
                 files.Add(lvi);
-                mainListView.VirtualListSize = files.Count;
             }
+            mainListView.VirtualListSize = files.Count;
             files.Sort(FileComparer);
             ShowStatus($"Показано каталогов: {folders.Count} и файлов: {dirfiles.Length}");
             mainListView.ResizeColumns(0);
