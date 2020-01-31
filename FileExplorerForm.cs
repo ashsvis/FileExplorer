@@ -86,7 +86,22 @@ namespace FileExplorer
             if (oldName == newName) return;
             internalop = true;
             if (item.IsFolder)
+            {
                 Directory.Move(oldName, newName);
+                if (mainTree.SelectedNode != null)
+                {
+                    var node = (TreeNodeFile)mainTree.SelectedNode;
+                    for (var i = 0; i < node.Nodes.Count; i++)
+                    {
+                        var renamedNode = (TreeNodeFile)node.Nodes[i];
+                        if (renamedNode.DirectoryName == oldName)
+                        {
+                            renamedNode.DirectoryName = newName;
+                            renamedNode.Text = Path.GetFileName(newName);
+                        }
+                    }
+                }
+            }
             else
                 File.Move(oldName, newName);
             FillVirtualList(newName);
@@ -528,10 +543,13 @@ namespace FileExplorer
             var node = (TreeNodeFile)mainTree.SelectedNode;
             if (node == null) return;
             var newFolderName = FileHelper.AddNewFolderIn(node.DirectoryName);
-            node.Nodes.Add(new TreeNodeStub());
+            var newNode = new TreeNodeFile() { Text = Path.GetFileName(newFolderName), DirectoryName = newFolderName };
+            node.Nodes.Add(newNode);
+            newNode.Nodes.Add(new TreeNodeStub());
             internalop = true;
             FillVirtualList(newFolderName);
             //FindLabel(newFolderName);
+            mainTree.Update();
         }
 
         private void FindLabel(string newFolderName)
@@ -579,6 +597,16 @@ namespace FileExplorer
                         try
                         {
                             FileHelper.MoveFileToRecycleBin(item.FileName);
+                            if (item.IsFolder)
+                            {
+                                var node = (TreeNodeFile)mainTree.SelectedNode;
+                                for (var i = 0; i < node.Nodes.Count; i++)
+                                {
+                                    var removedNode = (TreeNodeFile)node.Nodes[i];
+                                    if (removedNode.DirectoryName == item.FileName)
+                                        node.Nodes.Remove(removedNode);
+                                }
+                            }
                         }
                         catch (Exception ex)
                         {
